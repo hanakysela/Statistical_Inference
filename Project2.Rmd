@@ -1,0 +1,80 @@
+---
+title: "Project2"
+author: "Hana Kysela"
+date: "May 21, 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.height=2.5)
+```
+
+# Project 2 - ToothGrow data analysis
+
+## Overview
+
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC). 
+Source: https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/ToothGrowth.html
+
+Load the ToothGrowth data and perform some basic exploratory data analyses
+Provide a basic summary of the data.
+Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose.
+State your conclusions and the assumptions needed for your conclusions. 
+
+
+```{r }
+
+# packages management
+if (!require("pacman")) install.packages("pacman")
+  pacman::p_load(ggplot2, datasets)
+
+```
+## 1. Load the data + 2. Provide basic summary of the data
+
+```{r }
+data("ToothGrowth")
+ToothGrowth$dose<-as.factor(ToothGrowth$dose)
+str(ToothGrowth) #shows data types
+summary(ToothGrowth) #shows summary of values
+
+```
+## Growth analysis:
+A. Will higher dosage of supplements result in bigger lenght of odontoblasts?
+
+```{r echo=FALSE}
+  ggplot(data=ToothGrowth, aes(x=dose,y=len,fill=dose)) +
+  geom_boxplot()
+```
+
+B. Does the supplement type matter?
+
+```{r echo=FALSE}
+  ggplot(data=ToothGrowth, aes(x=supp,y=len,fill=supp)) +
+  geom_boxplot()
+```
+
+C. Or is it combination of both?
+
+```{r echo=FALSE}
+ggplot(ToothGrowth, aes(x=dose,y=len,fill=dose)) +
+geom_boxplot(notch=F) + facet_grid(.~supp) +
+     scale_x_discrete("Dosage (Milligram)") +   
+     scale_y_continuous("Length of Teeth") +  
+     ggtitle("Growth by supp and dose")
+```
+
+## 3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose
+```{r }
+anova <- aov(len ~ supp * dose, data=ToothGrowth)
+summary(anova)
+```
+We can see here that either supplement and dosage affect the growth of odontoblasts, however their respective combination has a minor impact on the growth.
+
+The confidence intervals:
+```{r }
+confint(anova)
+```
+
+## 4. State your conclusions and the assumptions needed for your conclusions. 
+We can now confirm, that the higher dosage of either supplement, the bigger growth. With the same dosages, orange juice that contains vitamin C seems to have higher impact on the growth of odontoblasts.
+All these results are under the assumptions that the guinea pigs used in this tests were all kept under the same conditions, are from the same population and were sampled truly randomly. If these conclusions were to be generalized, it assumes that the guinea pigs are representative of the whole guinea pigs population - or for rodents? The dosage and supplement type would have to be assigned to each guinea pig randomly.
