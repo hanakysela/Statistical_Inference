@@ -1,18 +1,20 @@
 ---
-title: "Project_1"
+title: "Project 1"
 author: "Hana Kysela"
-date: "May 20, 2016"
-output: html_document
+date: "May 21, 2016"
+output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE, fig.height=4)
 ```
 
 
 # Project 1 - Simulation excercise
 
+
 ## Overview
+
 In this project I will investigate the exponential distribution in R and compare it with the Central Limit Theorem.
 
 I am going to 
@@ -20,12 +22,13 @@ Show the sample mean and compare it to the theoretical mean of the distribution.
 Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
 Show that the distribution is approximately normal.
 
+
+
 ## Simulation
 
+```{r }
 
-```{r}
-
-set.seed(123456) #allows reproducibility
+set.seed(1234) #allows reproducibility
 
 # packages management
 if (!require("pacman")) install.packages("pacman")
@@ -40,31 +43,63 @@ lambda <- 0.2   # lambda
 n <- 40         # exponentials
 sims <- 1000     # simulations
 
-Exp <- matrix(data=rexp(n * sims, lambda), nrow=sims)
-ExpMeans <- data.frame(means=apply(Exp, 1, mean))
+ExpMeans<-data.frame(sapply((1:sims), function(x) {mean(rexp(n, lambda))}))
+colnames(ExpMeans)<- "means"
 
-# plot + more info
-hist(ExpMeans$means)
-
-  
 ```
 
 
-#### STEAL FROM GITHUB ####
 
-# https://github.com/TomLous/coursera-statistical-inference/blob/master/assessments/courseproject1.Rmd
-lambda <- 0.2 # lambda for rexp
-n <- 40 # number of exponetials
-numberOfSimulations <- 1000 # number of tests
+## Histogram of the means
 
-# set the seed to create reproducability
-set.seed(11081979)
+```{r }
 
-exponentialDistributions <- matrix(data=rexp(n * numberOfSimulations, lambda), nrow=numberOfSimulations)
-exponentialDistributionMeans <- data.frame(means=apply(exponentialDistributions, 1, mean))
+ggplot(data = ExpMeans, aes(x = means)) + 
+  geom_histogram(binwidth=0.2, fill = "grey") +  
+  scale_x_continuous(breaks=round(seq(min(ExpMeans$means), max(ExpMeans$means), by=1)))
+  
+```
 
-ggplot(data = exponentialDistributionMeans, aes(x = means)) + 
-  geom_histogram(binwidth=0.1) +   
-  scale_x_continuous(breaks=round(seq(min(exponentialDistributionMeans$means), max(exponentialDistributionMeans$means), by=1)))
+## 1. Show the sample mean and compare it to the theoretical mean of the distribution.
 
+Expected (theoretical) mean $\mu$ is $\frac{1}{\lambda}$
+```{r}
+1/lambda
+```
+The actual mean from the simulation is 
+```{r}
+mean(ExpMeans$means)
+```
+## Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
 
+Expected standard deviation of sample with standard deviation $\sigma$ is $\sigma = \frac{1/\lambda}{\sqrt{n}}$ 
+Expected (theoretical) variance $Var$ of this sample is $Var = \sigma^2$
+
+```{r}
+sd<-1/lambda/sqrt(n)
+var<-sd^2
+var
+```
+
+The actual variance from the simulation is 
+```{r}
+sd<-sd(ExpMeans$means)
+var<-sd^2
+var
+
+```
+## 3. Show that the distribution is approximately normal.
+
+The chart shows the histogram of simulated means and the theoretical values are in red, the simulation is in blue.
+
+```{r }
+ggplot(data = ExpMeans, aes(x = means)) + 
+  geom_histogram(aes(y=..density..), binwidth = 0.2, fill = "grey") +
+  stat_function(fun = dnorm, args = list(mean = 5 , sd = sd(ExpMeans$means)), colour = "red", size=1) + #theory
+  stat_function(fun = dnorm, args = list(mean = mean(ExpMeans$means) , sd = sd(ExpMeans$means)), colour = "blue", size=1) + #sim
+  geom_vline(xintercept = 5, size=1, colour="red") + # mean theory
+  geom_vline(xintercept = mean(ExpMeans$means), size=1, colour="blue") + # mean sim
+
+  scale_x_continuous(breaks=round(seq(min(ExpMeans$means), max(ExpMeans$means), by=1)))
+  
+```
